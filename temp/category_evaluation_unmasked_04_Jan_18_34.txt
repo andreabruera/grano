@@ -1,0 +1,77 @@
+Coarse_individuals
+
+All sentences balanced:
+	v score: 0.6475518005931211
+	homogeneity: 0.6475279820788125
+	completeness: 0.6475756208597633
+	purity: 0.9335077260007301
+First sentence balanced:
+	v score: 0.8082372760842091
+	homogeneity: 0.80685297934332
+	completeness: 0.8096263309926303
+	purity: 0.9643705463182898
+
+
+
+Coarse_common
+
+All sentences balanced:
+	v score: 0.20016483533324278
+	homogeneity: 0.15908807944596626
+	completeness: 0.2698371500760858
+	purity: 0.8579545454545454
+First sentence balanced:
+	v score: 0.1256253799215718
+	homogeneity: 0.08880563947945698
+	completeness: 0.2146013131516922
+	purity: 0.9166666666666666
+
+
+
+Coarse_both
+
+All sentences balanced:
+	v score: 0.626259875560494
+	homogeneity: 0.6262175184184905
+	completeness: 0.6263022384329308
+	purity: 0.9277804239104549
+First sentence balanced:
+	v score: 0.7985289538792766
+	homogeneity: 0.7969490721451217
+	completeness: 0.800115112010164
+	purity: 0.9618096357226792
+
+
+
+Within people all together
+
+All sentences balanced:
+	v score: 0.3415725520111649
+	homogeneity: 0.3252758001084986
+	completeness: 0.3595884115628399
+	purity: 0.521324354657688
+First sentence balanced:
+	v score: 0.3913605172130299
+	homogeneity: 0.38141908384393697
+	completeness: 0.40183405310460707
+	purity: 0.5098039215686274
+
+
+
+Within place all together
+
+All sentences balanced:
+	v score: 0.18585582848492066
+	homogeneity: 0.18434479353643932
+	completeness: 0.18739183941850635
+	purity: 0.4194515852613539
+First sentence balanced:
+	v score: 0.47404289275027484
+	homogeneity: 0.4625874632997827
+	completeness: 0.48608008919601015
+	purity: 0.631578947368421
+
+
+
+Within people pairwise
+
