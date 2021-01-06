@@ -11,8 +11,7 @@ import numpy
 
 from sklearn import metrics
 from sklearn.cluster import KMeans
-from utils.extract_word_lists import Entities
-from utils.evaluation import cos
+from extract_word_lists import Entities
 from tqdm import tqdm
 from scipy.stats import pearsonr
 
@@ -23,7 +22,7 @@ def prepare_file_name(entity):
     return entity_file_name
 
 def extract_word_vectors(args, entity):
-    path = '/import/cogsci/andrea/github/fame/data/bert_january_2020/bert_{}_prova'.format(vector_extraction_mode)
+    path = '/import/cogsci/andrea/github/dataset/bert_january_2020/bert_{}_prova'.format(vector_extraction_mode)
     entity_file_name = prepare_file_name(entity)
     with open(os.path.join(path, entity_file_name)) as entity_file:
         entity_vectors = [numpy.array(l.strip().split('\t')[1:], dtype=numpy.single) for l in entity_file.readlines()]
@@ -77,8 +76,6 @@ def test_clustering(data, categories):
         
         current_results = [data_type, [v_score, homogeneity_score, completeness_score, purity_score]]
         results.append(current_results)
-        if len(samples) == 150:
-            import pdb; pdb.set_trace()
         #print(current_results)
 
     return results
@@ -88,26 +85,11 @@ parser.add_argument('--masked', action='store_true', default=False, help='Uses v
 args = parser.parse_args()
 
 time_now = time.strftime('%d_%b_%H_%M', time.gmtime())
-vector_extraction_mode = 'masked' if args.masked else 'unmasked'
+#vector_extraction_mode = 'masked' if args.masked else 'unmasked'
+vector_extraction_mode = 'full_sentence'
 
 Ents = Entities('full_wiki')
-'''
-with open('temp/full_wiki_stats.txt', 'w') as o:
-    for coarse, finer_counter in categories.items():
-        o.write('{}\n\n'.format(coarse))
-        for fine, count in finer_counter.items():
-            o.write('{}: {}'.format(fine, count))
-        o.write('\n\n\n') 
-entities_vectors = collections.defaultdict(list)
-
-for ent in tqdm(entities_list.keys()):
-    try: 
-        entities_vectors[ent] = extract_word_vectors(args, ent)
-    except FileNotFoundError:
-        print(ent)
-'''
 coarser, finer = Ents.words
-
 
 ### Cleaning up the list of entities from those which have no actual vectors
 exclude_list = ['Country', 'City', 'Area', 'Politics', 'Body of water', 'Literature', 'Music', 'Monument', 'Film', 'Athlete']
@@ -141,14 +123,15 @@ for condition in conditions:
     print('Now evaluating clustering for the coarse categories - {} words'.format(condition_name))
 
     all_cluster_data = [(v, coarse_full[ent]) for ent, vecs in condition_data.items() for v in vecs]
-    #smaller_cluster_data = [(vecs[0], coarse_full[ent]) for ent, vecs in condition_data.items()]
-    smaller_cluster_data = [(numpy.average(vecs, axis=0), coarse_full[ent]) for ent, vecs in condition_data.items()] # average, not first sentence
+    smaller_cluster_data = [(vecs[0], coarse_full[ent]) for ent, vecs in condition_data.items()]
+    average_cluster_data = [(numpy.average(vecs, axis=0), coarse_full[ent]) for ent, vecs in condition_data.items()] # average, not first sentence
 
     balanced_full = balance_data(all_cluster_data)
     balanced_smaller = balance_data(smaller_cluster_data)
+    balanced_average = balance_data(average_cluster_data)
 
     #test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
-    test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
+    test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced'), (balanced_average, 'All vectors averaged')]
 
     category_results['Coarse_{}'.format(condition_name)] = test_clustering(test_data, 2)
 
@@ -167,13 +150,15 @@ for coarse, ents in tqdm(categories.items()):
     number_categories = len({v : 0 for k, v in finer.items() if k in ents})
     print('Category: {}\t- Number of categories: {}'.format(coarse, number_categories))
     all_cluster_data = [(v, finer[ent]) for ent in ents for v in entities_vectors[ent]]
-    #smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in ents]
-    smaller_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in ents] # average, not first sentence
+    smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in ents]
+    average_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in ents] # average, not first sentence
 
     balanced_full = balance_data(all_cluster_data)
     balanced_smaller = balance_data(smaller_cluster_data)
+    balanced_average = balance_data(average_cluster_data)
     #test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
-    test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
+    #test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
+    test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced'), (balanced_average, 'All vectors averaged')]
 
     category_results['Within {} all together'.format(coarse)] = test_clustering(test_data, number_categories)
 
@@ -192,12 +177,13 @@ for coarse, ents in tqdm(categories.items()):
 
         c_data = fine_cats[c[0]] + fine_cats[c[1]]
         all_cluster_data = [(v, finer[ent]) for ent in c_data for v in entities_vectors[ent]]
-        #smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in c_data]
-        smaller_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in c_data] # average, not first sentence
+        smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in c_data]
+        average_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in c_data] # average, not first sentence
 
         balanced_full = balance_data(all_cluster_data)
         balanced_smaller = balance_data(smaller_cluster_data)
-        test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
+        balanced_average = balance_data(average_cluster_data)
+        test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced'), (balanced_average, 'All vectors averaged')]
 
         current_results = test_clustering(test_data, 2)
         for i in current_results:

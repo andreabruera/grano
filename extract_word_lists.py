@@ -10,7 +10,8 @@ def prepare_file_name(entity):
     return entity_file_name
 
 def extract_word_vectors(entity):
-    path = '/import/cogsci/andrea/github/fame/data/bert_january_2020/bert_unmasked_prova'
+    #path = '/import/cogsci/andrea/dataset/bert_january_2020/bert_unmasked_prova'
+    path = '/import/cogsci/andrea/dataset/word_vectors/bert_january_2020/bert_full_sentence_prova'
     entity_file_name = prepare_file_name(entity)
 
     try:
@@ -41,7 +42,7 @@ class Entities:
 
     def __init__(self, required_words):
 
-        self.base_folder = os.path.join(os.getcwd(), 'data')
+        self.base_folder = '/import/cogsci/andrea/github/names_count'
 
         if required_words == 'wakeman_henson':
             self.words = self.wakeman_henson()
