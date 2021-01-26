@@ -1,0 +1,6 @@
+individual evaluation	-	Area
+
+purity	mean: 1.0	std: 0.0
+v-score	mean: 1.0	std: 0.0
+homogeneity	mean: 1.0	std: 0.0
+completeness	mean: 1.0	std: 0.0

@@ -1,53 +1,55 @@
+import random
+import numpy
+import collections
+import itertools
+import logging
+
+from utils import test_clustering, write_to_file
+
+from tqdm import tqdm
+
 def individual(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
 
-    ### Pairwise individual vs individual evaluation
+    ### One condition: all sentences
 
-    print('Now evaluating clustering for couples of individuals within the finer categories')
+    ### Splitting and balancing the entity vectors
+    test_data = collections.defaultdict(lambda : collections.defaultdict(list))
 
-    results = collections.defaultdict(lambda: collections.defaultdict(list))
+    for fine_cat, ent_list in fine.items():
+        for ent in ent_list:
+            test_data[fine_cat][ent] = all_vectors[ent]
 
-    for coarse, fine_counter in categories.items():
-        fine = [k for k, v in fine_counter.items() if v > 5]
-        print('Clustering of individuals within {}'.format(coarse))
-        for f in tqdm(fine):
-            f_data = {ent : vecs  for ent, vecs in entities_vectors.items() if entities_list[ent][1] == f}
-            combs = itertools.combinations([k for k in f_data.keys()], 2)
-            for c in combs:
-                #print(c)
-                full_data = [(sample, 0) for sample in f_data[c[0]]] + [(sample, 1) for sample in f_data[c[1]]]
-                balanced_data = balance_data(full_data)
-                current_results = test_clustering([[full_data, 'Full data'], [balanced_data, 'Balanced data']], 2)
-                results[coarse][f].append(current_results)
+    final_results = dict()
+    for fine_cat_type, fine_dict in test_data.items():
+        logging.info('Category: {}'.format(fine_cat_type))
+    
+        ents = [k for k in fine_dict.keys()]
+        ### Pairwise category
+        logging.info('Pairwise comparisons...')
+        individual_combs = [c for c in itertools.combinations(ents, 2)]
 
-    ### Pickling results, so as to be able to analyse results
+        for c in tqdm(individual_combs):
 
-    to_be_pickled = {k : v for k, v in results.items()}
-    del results
-    with open('temp/pickled_individual_evaluation_{}_{}.pkl'.format(vector_extraction_mode, time_now), 'wb') as o:
-        pickle.dump(to_be_pickled, o) 
+            pairwise_results = collections.defaultdict(list)
 
-    ### Writing results for the individual vs individual analysis:
+            pairwise_test_data = collections.defaultdict(lambda : collections.defaultdict(list))
+            ent_one = fine_dict[c[0]]
+            ent_two = fine_dict[c[1]]
 
-    with open('temp/pickled_individual_evaluation_masked_21_Oct_21_31.pkl', 'rb') as i:
-        to_be_pickled = pickle.load(i)
+            ### Balancing the testdata
+            max_amount = min(len(ent_one), len(ent_two))
+            
+            pairwise_test_data['all sentences'][c[0]] = random.sample(ent_one, k=len(ent_one))[:max_amount]
+            pairwise_test_data['all sentences'][c[1]] = random.sample(ent_two, k=len(ent_two))[:max_amount]
 
-    #with open('temp/individual_vs_individual_{}_{}.txt'.format(vector_extraction_mode, time_now), 'w') as o:
-    with open('temp/individual_vs_individual_masked_25_10.txt', 'w') as o:
-        for coarse, finer in to_be_pickled.items():
-            overall_results = collections.defaultdict(list)
-            o.write('{}\n\n\n'.format(coarse))
-            for fine, scores in finer.items():
-                fine_results = collections.defaultdict(list)
-                o.write('{}\n'.format(fine))
-                for both_scores in scores:
-                    for score in both_scores:
-                        fine_results[score[0]].append(score[1][0])
-                for data_type, filtered_scores in fine_results.items():
-                    current_mean = numpy.nanmean(filtered_scores)
-                    current_std = numpy.nanstd(filtered_scores)
-                    o.write('{}: mean {} - std {}\n'.format(data_type, current_mean, current_std))
-                    overall_results[data_type].append(current_mean)
-                o.write('\n\n')
-            for data_type, scores in overall_results.items():
-                o.write('General mean for {}, {}: {}\n'.format(coarse, data_type, numpy.nanmean(scores)))
-            o.write('\n\n')
+            ### Collecting the results
+            comb_results = test_clustering(args, pairwise_test_data, relevant_indices=dict(), number_of_categories=2, comparisons='{}_vs_{}'.format(c[0], c[1]))
+            for result_type, results in comb_results['all sentences'].items():
+                pairwise_results[result_type].append(results)
+
+        ### Averaging the results
+        averaged_pairwise = {k : 'mean: {}\tstd: {}'.format(numpy.nanmean(v), numpy.nanstd(v)) for k, v in pairwise_results.items()}
+        final_results[fine_cat_type] = averaged_pairwise
+
+    ### Finally, writing it to file
+    write_to_file(args, 'individual_pairwise', final_results)

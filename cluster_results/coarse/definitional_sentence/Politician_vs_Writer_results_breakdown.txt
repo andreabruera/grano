@@ -1,0 +1,6 @@
+coarse evaluation	-	definitional sentence
+
+purity	0.4827586206896552
+v-score	0.18080907740229854
+homogeneity	0.2672616394325799
+completeness	0.13661687953432178

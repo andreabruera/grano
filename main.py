@@ -12,7 +12,7 @@ import logging
 import pickle
 
 from very_coarse_level import very_coarse
-from coarse_level import coarse
+from coarse_level import coarse_level
 from individual_level import individual
 from facet_level import facet
 
@@ -24,7 +24,7 @@ def clustering_analysis(args, all_entities, all_vectors, fine, coarse, fine_to_c
     if args.granularity_level == 'very_coarse':
         results = very_coarse(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)
     elif args.granularity_level == 'coarse':
-        results = coarse(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)
+        results = coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)
     elif args.granularity_level == 'individual':
         results = individual(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)
     elif args.granularity_level == 'facet':
@@ -71,6 +71,4 @@ all_vectors = vectors.vectors
 
 fine_to_coarse = {v[0] : v[1] for k, v in all_entities.items()}
 
-
-results = clustering_analysis(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)
-import pdb; pdb.set_trace()
+clustering_analysis(args, all_entities, all_vectors, fine, coarse, fine_to_coarse)

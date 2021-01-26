@@ -1,0 +1,6 @@
+coarse evaluation	-	average of the sentences
+
+purity	0.5882352941176471
+v-score	0.42422242296438584
+homogeneity	0.6516481083281661
+completeness	0.3144715966041041

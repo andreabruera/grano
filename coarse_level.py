@@ -1,61 +1,83 @@
-def coarse(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
+import random
+import numpy
+import collections
+import itertools
+import logging
 
-    ### Finer grained people/places clustering
+from utils import test_clustering
 
-    # Setting up the coarser categories
+def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
 
-    categories = collections.defaultdict(list)
-    categories['people'] = [k for k, v in coarser.items() if v == 'Person']
-    categories['place'] = [k for k, v in coarser.items() if v == 'Place']
+    ### Three conditions: all sentences, first per-entity sentence, average of the per-entity sentences
 
-    # All together
+    ### Splitting and balancing the entity vectors
+    full_ent_data = collections.defaultdict(lambda : collections.defaultdict(lambda : collections.defaultdict(list)))
 
-    print('Now evaluating clustering for the finer categories, taken all together')
-    for coarse, ents in tqdm(categories.items()):
-        number_categories = len({v : 0 for k, v in finer.items() if k in ents})
-        print('Category: {}\t- Number of categories: {}'.format(coarse, number_categories))
-        all_cluster_data = [(v, finer[ent]) for ent in ents for v in entities_vectors[ent]]
-        smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in ents]
-        average_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in ents] # average, not first sentence
+    for fine_cat, ent_list in fine.items():
+        coarse_cat = fine_to_coarse[fine_cat]
+        for ent in ent_list:
+            full_ent_data[coarse_cat]['average of the sentences'][fine_cat].append(numpy.average(all_vectors[ent], axis=0))
+            full_ent_data[coarse_cat]['definitional sentence'][fine_cat].append(all_vectors[ent][0])
+            for ent_vec in all_vectors[ent]:
+                full_ent_data[coarse_cat]['all sentences'][fine_cat].append(ent_vec)
 
-        balanced_full = balance_data(all_cluster_data)
-        balanced_smaller = balance_data(smaller_cluster_data)
-        balanced_average = balance_data(average_cluster_data)
-        #test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
-        #test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced')]
-        test_data = [(balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced'), (balanced_average, 'All vectors averaged')]
+    ### Creating the test dictionary and recording the index from which fine category vectors start
+    test_data = dict()
+    relevant_indices = collections.defaultdict(list)
 
-        category_results['Within {} all together'.format(coarse)] = test_clustering(test_data, number_categories)
+    for very_coarse_cat, very_coarse_dict in full_ent_data.items():
 
-    # Pairwise
+        data_type_data = dict()
+        data_type_indices = dict()
 
-    print('Now evaluating clustering for the finer categories, taken two at a time')
-    for coarse, ents in tqdm(categories.items()):
-        fine_cats = collections.defaultdict(list)
+        for data_type, fine_dict in very_coarse_dict.items():
+            max_amount = min([len(v) for k, v in fine_dict.items()])
+            balanced_dict = {k : random.sample(v, k=len(v))[:max_amount] for k, v in fine_dict.items()}
+            data_type_data[data_type] = balanced_dict
+            data_type_indices[data_type] = max_amount
 
-        for e in ents:
-            fine_cats[finer[e]].append(e)
-        cats_combs = itertools.combinations([k for k in fine_cats.keys()], 2)
+        test_data[very_coarse_cat] = data_type_data
+        relevant_indices[very_coarse_cat] = data_type_indices
 
-        coarse_results = collections.defaultdict(list)
-        for c in cats_combs:
+    ### Splitting and balancing the category vectors
+    full_cat_data = collections.defaultdict(lambda : collections.defaultdict(lambda : collections.defaultdict(list)))
 
-            c_data = fine_cats[c[0]] + fine_cats[c[1]]
-            all_cluster_data = [(v, finer[ent]) for ent in c_data for v in entities_vectors[ent]]
-            smaller_cluster_data = [(entities_vectors[ent][0], finer[ent]) for ent in c_data]
-            average_cluster_data = [(numpy.average(entities_vectors[ent], axis=0), finer[ent]) for ent in c_data] # average, not first sentence
+    for fine_cat, coarse_cat in fine_to_coarse.items():
+        full_cat_data[coarse_cat]['average of the sentences'][fine_cat].append(numpy.average(all_vectors[fine_cat], axis=0))
+        full_cat_data[coarse_cat]['definitional sentence'][fine_cat].append(all_vectors[fine_cat][0])
+        for cat_vec in all_vectors[fine_cat]:
+            full_cat_data[coarse_cat]['all sentences'][fine_cat].append(cat_vec)
 
-            balanced_full = balance_data(all_cluster_data)
-            balanced_smaller = balance_data(smaller_cluster_data)
-            balanced_average = balance_data(average_cluster_data)
-            test_data = [(all_cluster_data, 'All sentences unbalanced'), (smaller_cluster_data, 'First sentence unbalanced'), (balanced_full, 'All sentences balanced'), (balanced_smaller, 'First sentence balanced'), (balanced_average, 'All vectors averaged')]
+    ### Adding the category vectors to the test dictionary
+    for very_coarse_cat, very_coarse_dict in full_cat_data.items():
 
-            current_results = test_clustering(test_data, 2)
-            for i in current_results:
-                coarse_results[i[0]].append(i[1])
+        data_type_data = dict()
+        data_type_indices = dict()
 
-        coarse_results = {k : [numpy.nanmean(scores[i]) for i in range(4)] for k, scores in coarse_results.items()}
+        for data_type, fine_dict in very_coarse_dict.items():
+            max_amount = min([len(v) for k, v in fine_dict.items()])
+            balanced_dict = {k : random.sample(v, k=len(v))[:max_amount] for k, v in fine_dict.items()}
+            for fine_cat, vecs in balanced_dict.items():
+                for vec in vecs:
+                    test_data[very_coarse_cat][data_type][fine_cat].append(vec)
 
-        for score_tuple in coarse_results.items():
-            
-            category_results['Within {} pairwise'.format(coarse)].append(score_tuple)
+    for very_coarse_type, data in test_data.items():
+        logging.info('Category: {}'.format(very_coarse_type))
+        logging.info('All fine categories...'.format(very_coarse_type))
+        fine_categories = {k for k, v in fine_to_coarse.items() if v==very_coarse_type}
+        number_of_categories = len(fine_categories)
+        ### All fine categories together
+        #test_clustering(args, data, relevant_indices, number_of_categories, comparisons='all_within_{}'.format(very_coarse_type))
+    
+        ### Pairwise category
+        logging.info('Pairwise comparisons...'.format(very_coarse_type))
+        fine_cats_combs = itertools.combinations(fine_categories, 2)
+
+        for c in fine_cats_combs:
+            pairwise_test_data = dict()
+            for data_type, fine_dict in data.items():
+                data_type_dict = dict()
+                data_type_dict[c[0]] = fine_dict[c[0]]
+                data_type_dict[c[1]] = fine_dict[c[1]]
+                pairwise_test_data[data_type] = data_type_dict
+            test_clustering(args, pairwise_test_data, relevant_indices, number_of_categories, comparisons='{}_vs_{}'.format(c[0], c[1]))
