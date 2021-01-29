@@ -61,14 +61,17 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
                 for vec in vecs:
                     test_data[very_coarse_cat][data_type][fine_cat].append(vec)
 
+    all_results = dict()
+
     for very_coarse_type, data in test_data.items():
         logging.info('Category: {}'.format(very_coarse_type))
         logging.info('All fine categories...'.format(very_coarse_type))
         fine_categories = {k for k, v in fine_to_coarse.items() if v==very_coarse_type}
         number_of_categories = len(fine_categories)
         ### All fine categories together
-        #test_clustering(args, data, relevant_indices, number_of_categories, comparisons='all_within_{}'.format(very_coarse_type))
+        test_clustering(args, data, relevant_indices, number_of_categories, comparisons='all_within_{}'.format(very_coarse_type))
     
+        current_results = collections.defaultdict(lambda : collections.defaultdict(list))
         ### Pairwise category
         logging.info('Pairwise comparisons...'.format(very_coarse_type))
         fine_cats_combs = itertools.combinations(fine_categories, 2)
@@ -80,4 +83,10 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
                 data_type_dict[c[0]] = fine_dict[c[0]]
                 data_type_dict[c[1]] = fine_dict[c[1]]
                 pairwise_test_data[data_type] = data_type_dict
-            test_clustering(args, pairwise_test_data, relevant_indices, number_of_categories, comparisons='{}_vs_{}'.format(c[0], c[1]))
+            comb_results = test_clustering(args, pairwise_test_data, relevant_indices, number_of_categories, comparisons='{}_vs_{}'.format(c[0], c[1]))
+
+            current_results[c[0]][c[1]] = comb_results
+
+        all_results[very_coarse_type] = current_results
+
+    ### TO DO: write to file and plot the cumulative results for the categories

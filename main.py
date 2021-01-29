@@ -33,7 +33,7 @@ def clustering_analysis(args, all_entities, all_vectors, fine, coarse, fine_to_c
     return results
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--masked', action='store_true', default=False, help='Uses vectors obtained from masked words instead of normal mentions')
+parser.add_argument('--vector_mode', choices=['masked', 'unmasked', 'full_sentence', 'facets'], help='Specifies which vectors to use')
 parser.add_argument('--entity_central_path', default='/import/cogsci/andrea/github', help='Indicates where to look for the entity_central package')
 parser.add_argument('--granularity_level', required=True, choices=['very_coarse', 'coarse', 'individual', 'facet'], help='Indicates at which level of granularity analyses should be carried out')
 args = parser.parse_args()
@@ -49,9 +49,10 @@ from entity_central.read_vectors import EntityVectors
 
 logging.info('Loading entities and vectors')
 #entities = Entities('full_wiki')
-#vectors = EntityVectors(entities.word_categories, 'bert', 'unmasked')
+#vectors = EntityVectors(entities.word_categories, 'bert', args.vector_mode)
 
-with open('very_quick_pickle.pkl', 'rb') as o:
+with open('very_quick_pickle_{}.pkl'.format(args.vector_mode), 'rb') as o:
+    #pickle.dump((entities, vectors), o)
     entities, vectors = pickle.load(o)
 
 logging.info('Cleaning up entities and vectors')

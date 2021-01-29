@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from sklearn import metrics
 from sklearn.cluster import KMeans
 
-def fine_cat_evaluation(coarse_dicts, relevant_indices, predicted_labels, majority_per_class):
+def fine_cat_evaluation(data_type, coarse_dicts, relevant_indices, predicted_labels, majority_per_class):
 
     fine_cat_indices = dict()
     c = 0
@@ -75,8 +75,8 @@ def tsne_colors(args):
     return colors
 
 def prepare_folder(args, data_type):
-
-    path = os.path.join('cluster_results', args.granularity_level, data_type.replace(' ', '_'))
+    
+    path = os.path.join('cluster_results', args.vector_mode, args.granularity_level, data_type.replace(' ', '_'))
     os.makedirs(path, exist_ok=True)
 
     return path
@@ -134,7 +134,7 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
         results[data_type]['completeness'] = completeness_score
 
         if args.granularity_level == 'very_coarse':
-            fine_cat_indices, fine_cat_accuracy = fine_cat_evaluation(coarse_dicts, relevant_indices, predicted_labels, majority_per_class)
+            fine_cat_indices, fine_cat_accuracy = fine_cat_evaluation(data_type, coarse_dicts, relevant_indices, predicted_labels, majority_per_class)
             results[data_type]['finer category accuracy'] = fine_cat_accuracy
 
         else:
