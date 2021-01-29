@@ -51,7 +51,7 @@ logging.info('Loading entities and vectors')
 #entities = Entities('full_wiki')
 #vectors = EntityVectors(entities.word_categories, 'bert', args.vector_mode)
 
-with open('very_quick_pickle_{}.pkl'.format(args.vector_mode), 'rb') as o:
+with open('pickles/very_quick_pickle_{}.pkl'.format(args.vector_mode), 'rb') as o:
     #pickle.dump((entities, vectors), o)
     entities, vectors = pickle.load(o)
 
