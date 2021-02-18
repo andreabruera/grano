@@ -144,10 +144,10 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
 
             ### Plotting the tsne visualization
             logging.info('Now plotting tsne in mode: {}'.format(data_type))
-            plot_tsne(args, comparisons, data_type, samples, golden_labels, fine_cat_indices)
+            #plot_tsne(args, comparisons, data_type, samples, golden_labels, fine_cat_indices)
 
             ### Writing to file
-            write_to_file(args, comparisons, results)
+            #write_to_file(args, comparisons, results)
 
     return results
 

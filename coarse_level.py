@@ -1,10 +1,12 @@
+import os
 import random
 import numpy
 import collections
 import itertools
 import logging
 
-from utils import test_clustering
+from utils import test_clustering, prepare_folder
+from plot_utils import confusion_matrix
 
 def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
 
@@ -74,7 +76,7 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
         current_results = collections.defaultdict(lambda : collections.defaultdict(list))
         ### Pairwise category
         logging.info('Pairwise comparisons...'.format(very_coarse_type))
-        fine_cats_combs = itertools.combinations(fine_categories, 2)
+        fine_cats_combs = [c for c in itertools.combinations(fine_categories, 2)]
 
         for c in fine_cats_combs:
             pairwise_test_data = dict()
@@ -86,7 +88,39 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
             comb_results = test_clustering(args, pairwise_test_data, relevant_indices, number_of_categories, comparisons='{}_vs_{}'.format(c[0], c[1]))
 
             current_results[c[0]][c[1]] = comb_results
+            current_results[c[1]][c[0]] = comb_results
 
-        all_results[very_coarse_type] = current_results
+        ### TO DO: write to file and plot the cumulative results for the categories
+        for f in fine_categories:
+            f_dict = collections.defaultdict(lambda : collections.defaultdict(float))
+            for data_type in data.keys():
+                f_dict[data_type]['purity'] = 0.0 
+                f_dict[data_type]['v_score'] = 0.0 
+            current_results[f][f] = f_dict
 
-    ### TO DO: write to file and plot the cumulative results for the categories
+        matrix_results = collections.defaultdict(lambda : collections.defaultdict(list))
+        for f_one in fine_categories:
+            pair_results = collections.defaultdict(lambda : collections.defaultdict(list))
+            for f_two in fine_categories:
+
+                all_res = current_results[f_one][f_two]
+
+                for data_type, data_res in all_res.items():
+
+                    purity = data_res['purity']
+                    v_score = data_res['v-score']
+
+                    pair_results[data_type]['purity'].append(purity)       
+                    pair_results[data_type]['v-score'].append(v_score)       
+
+            for data_type, data_dict in pair_results.items():
+                for score_type, score_list in data_dict.items():
+                    assert len(score_list) == len(fine_categories)
+                    matrix_results[data_type][score_type].append(score_list)
+        
+        for data_type, data_dict in matrix_results.items():
+            plot_path = prepare_folder(args, data_type)
+            os.makedirs(plot_path, exist_ok=True)
+            for score_type, matrix in data_dict.items():
+                confusion_matrix(matrix, fine_categories, very_coarse_type, score_type, plot_path)
+        import pdb; pdb.set_trace() 

@@ -33,9 +33,9 @@ def clustering_analysis(args, all_entities, all_vectors, fine, coarse, fine_to_c
     return results
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--vector_mode', choices=['masked', 'unmasked', 'full_sentence', 'facets'], help='Specifies which vectors to use')
-parser.add_argument('--entity_central_path', default='/import/cogsci/andrea/github', help='Indicates where to look for the entity_central package')
+parser.add_argument('--vector_mode', required=True, choices=['masked', 'unmasked', 'full_sentence', 'facets'], help='Specifies which vectors to use')
 parser.add_argument('--granularity_level', required=True, choices=['very_coarse', 'coarse', 'individual', 'facet'], help='Indicates at which level of granularity analyses should be carried out')
+parser.add_argument('--entity_central_path', default='/import/cogsci/andrea/github', help='Indicates where to look for the entity_central package')
 args = parser.parse_args()
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.INFO)
