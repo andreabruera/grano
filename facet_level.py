@@ -1,7 +1,17 @@
+from utils import facet_clustering
+
 def facet(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
 
     ### Facet analysis
 
+    for entity, vectors in all_vectors.items():
+        vectors = [{v.split('_')[0] : float(v.split('_')[1])} for vec in vectors for v in vec]
+        dimensions = [k for v in vectors for k in v.keys()]
+        final_vectors = [vec[dim] if dim in vec.keys() else 0. for vec in vectors for dim in dimensions]
+        clustered_vectors = facet_clustering(final_vectors)
+        
+
+    import pdb; pdb.set_trace()
     rsa_full = collections.defaultdict(dict)
 
     for e, vecs in entities_vectors.items():
