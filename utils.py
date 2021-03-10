@@ -9,6 +9,7 @@ from tsne_plots import compute_tsne
 from matplotlib import pyplot
 from sklearn import metrics
 from sklearn.cluster import KMeans, DBSCAN
+from sklearn.feature_extraction.text import TfidfTransformer
 
 def fine_cat_evaluation(data_type, coarse_dicts, relevant_indices, predicted_labels, majority_per_class):
 
@@ -153,17 +154,21 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
 
 def facet_clustering(vectors):
 
-    db = DBSCAN(eps=0.3, min_samples=10).fit(vectors)
-    labels = db.labels_
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
+    #db = DBSCAN(min_samples=3).fit(vectors)
+    vectors = TfidfTransformer().fit_transform(X=vectors)
+    vectors = vectors.todense().tolist()
+    k = KMeans(n_clusters=2, random_state=0).fit(vectors)
+    #labels = db.labels_
+    labels = k.labels_
+    #n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    #n_noise_ = list(labels).count(-1)
 
-    print('Estimated number of clusters: %d' % n_clusters_)
-    print('Estimated number of noise points: %d' % n_noise_)
+    #print('Estimated number of clusters: %d' % n_clusters_)
+    #print('Estimated number of noise points: %d' % n_noise_)
 
     labeled_vectors = collections.defaultdict(list)
-    for label, vector in zip(label, vectors):
-        labeled_vectors[label+1].append(vector)
+    for label, vector in zip(labels, vectors):
+        labeled_vectors[label+1 if label!=-1 else -1].append(vector)
     
     return labeled_vectors
 

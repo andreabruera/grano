@@ -48,8 +48,8 @@ from entity_central.extract_word_lists import Entities
 from entity_central.read_vectors import EntityVectors
 
 logging.info('Loading entities and vectors')
-#entities = Entities('full_wiki')
-#vectors = EntityVectors(entities.word_categories, 'bert', args.vector_mode)
+entities = Entities('full_wiki')
+vectors = EntityVectors(entities.word_categories, 'bert', args.vector_mode)
 
 #with open('pickles/very_quick_pickle_{}.pkl'.format(args.vector_mode), 'rb') as o:
     #pickle.dump((entities, vectors), o)
