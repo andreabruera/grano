@@ -152,14 +152,16 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
 
     return results
 
-def facet_clustering(vectors):
+def facet_clustering(vectors, number_of_clusters, mode='kmeans'):
 
-    #db = DBSCAN(min_samples=3).fit(vectors)
     vectors = TfidfTransformer().fit_transform(X=vectors)
     vectors = vectors.todense().tolist()
-    k = KMeans(n_clusters=2, random_state=0).fit(vectors)
-    #labels = db.labels_
-    labels = k.labels_
+    if mode  == 'kmeans':
+        clusters = KMeans(n_clusters=number_of_clusters, random_state=0).fit(vectors)
+    elif mode == 'dbscan':
+        clusters = DBSCAN(min_samples=3).fit(vectors)
+    labels = clusters.labels_
+    #labels = k.labels_
     #n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     #n_noise_ = list(labels).count(-1)
 

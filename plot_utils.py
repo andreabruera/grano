@@ -7,7 +7,7 @@ def confusion_matrix(matrix, labels, very_coarse_type, score_type, plot_path):
 
     fig, ax = pyplot.subplots(constrained_layout=True)
 
-    mat = ax.imshow(matrix, cmap='PuBu', extent=(0,5,5,0), vmin=0., vmax=1.)
+    mat = ax.imshow(matrix, cmap='PuBu', extent=(0,len(labels),len(labels),0), vmin=0., vmax=1.)
     ax.set_title('{} confusion matrix'.format(score_type), pad=10)
 
     ax.set_aspect(aspect='auto')

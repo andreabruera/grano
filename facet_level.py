@@ -13,18 +13,20 @@ def facet(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
             #for entity, vectors in all_vectors.items():
             for entity in fine_names:
                 vectors = all_vectors[entity]
-                if len(vectors) > 2: ### Just making sure there are enough vectors for the clustering to actually happen
+                number_of_clusters = 7
+                if len(vectors) > number_of_clusters*2: ### Just making sure there are enough vectors for the clustering to actually happen
                     vectors = [{v.split('_')[0] : float(v.split('_')[1]) for v in vec} for vec in vectors]
                     dimensions = list(set([k for v in vectors for k in v.keys()]))
                     final_vectors = [[vec[dim] if dim in vec.keys() else 0. for dim in dimensions] for vec in vectors]
-                    clustered_vectors = facet_clustering(final_vectors)
+                    clustered_vectors = facet_clustering(final_vectors, number_of_clusters=number_of_clusters, mode='kmeans')
                     averaged_vectors = {k : numpy.nanmean(v, axis=0) for k, v in clustered_vectors.items() if k!=-1}
 
-                    one_tenth = int(len(dimensions)/10)
-                    interpretable_vectors = {k : [dimensions[dim[0]] for dim in sorted([(i, v) for i, v in enumerate(list(vec))], key=lambda item: item[1], reverse=True)[:one_tenth]] for k, vec in averaged_vectors.items()}
+                    five_percent = int(len(dimensions)/20)
+                    interpretable_vectors = {k : [dimensions[dim[0]] for dim in sorted([(i, v) for i, v in enumerate(list(vec))], key=lambda item: item[1], reverse=True)[:five_percent]] for k, vec in averaged_vectors.items()}
                     o.write('{}\n\n'.format(entity))
-                    o.write('\tRole one: {}\n\n'.format(interpretable_vectors[1]))
-                    o.write('\tRole two: {}\n\n\n'.format(interpretable_vectors[2]))
+                    for k, v in interpretable_vectors.items():
+                        o.write('\tRole {}: {}\n\n'.format(k, v))
+                    o.write('\n')
 
     '''
     rsa_full = collections.defaultdict(dict)

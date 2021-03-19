@@ -49,7 +49,8 @@ from entity_central.read_vectors import EntityVectors
 
 logging.info('Loading entities and vectors')
 entities = Entities('full_wiki')
-vectors = EntityVectors(entities.word_categories, 'bert', args.vector_mode)
+max_number = 24 if 'facet' not in args.vector_mode else 200
+vectors = EntityVectors(entities_dict=entities.word_categories, model_name='bert', extraction_mode=args.vector_mode, max_number=200)
 
 #with open('pickles/very_quick_pickle_{}.pkl'.format(args.vector_mode), 'rb') as o:
     #pickle.dump((entities, vectors), o)
