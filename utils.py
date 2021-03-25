@@ -6,6 +6,7 @@ import os
 
 from tsne_plots import compute_tsne
 
+from tqdm import tqdm
 from matplotlib import pyplot
 from sklearn import metrics
 from sklearn.cluster import KMeans, DBSCAN
@@ -107,9 +108,9 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
 
     results = collections.defaultdict(lambda : collections.defaultdict(float))
 
-    for data_type, coarse_dicts in data.items():
+    for data_type, coarse_dicts in tqdm(data.items()):
 
-        if args.granularity_level != 'individual':
+        if args.granularity_level == 'very_coarse':
             logging.info('Now clustering data in mode: {}'.format(data_type))
         ### Preparing the data and recording the indices at which the vectors for the finer categories are
         samples = list()
@@ -141,14 +142,14 @@ def test_clustering(args, data, relevant_indices, number_of_categories, comparis
         else:
             fine_cat_indices = {k : [] for k in golden_labels}
 
-        if not args.granularity_level == 'individual':
+        if args.granularity_level == 'very_coarse':
 
             ### Plotting the tsne visualization
             logging.info('Now plotting tsne in mode: {}'.format(data_type))
-            #plot_tsne(args, comparisons, data_type, samples, golden_labels, fine_cat_indices)
+            plot_tsne(args, comparisons, data_type, samples, golden_labels, fine_cat_indices)
 
-            ### Writing to file
-            #write_to_file(args, comparisons, results)
+        ### Writing to file
+        write_to_file(args, comparisons, results)
 
     return results
 

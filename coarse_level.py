@@ -70,12 +70,13 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
         logging.info('All fine categories...'.format(very_coarse_type))
         fine_categories = {k for k, v in fine_to_coarse.items() if v==very_coarse_type}
         number_of_categories = len(fine_categories)
+
         ### All fine categories together
         test_clustering(args, data, relevant_indices, number_of_categories, comparisons='all_within_{}'.format(very_coarse_type))
     
-        current_results = collections.defaultdict(lambda : collections.defaultdict(list))
         ### Pairwise category
         logging.info('Pairwise comparisons...'.format(very_coarse_type))
+        current_results = collections.defaultdict(lambda : collections.defaultdict(list))
         fine_cats_combs = [c for c in itertools.combinations(fine_categories, 2)]
 
         for c in fine_cats_combs:
@@ -90,7 +91,7 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
             current_results[c[0]][c[1]] = comb_results
             current_results[c[1]][c[0]] = comb_results
 
-        ### TO DO: write to file and plot the cumulative results for the categories
+        ### Just adding the 0.0 for the square matrix
         for f in fine_categories:
             f_dict = collections.defaultdict(lambda : collections.defaultdict(float))
             for data_type in data.keys():
@@ -123,4 +124,4 @@ def coarse_level(args, all_entities, all_vectors, fine, coarse, fine_to_coarse):
             os.makedirs(plot_path, exist_ok=True)
             for score_type, matrix in data_dict.items():
                 confusion_matrix(matrix, fine_categories, very_coarse_type, score_type, plot_path)
-        import pdb; pdb.set_trace() 
+
